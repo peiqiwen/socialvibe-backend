@@ -9,7 +9,12 @@ const router = express.Router();
 // 配置multer存储
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../uploads/images');
+    let uploadDir;
+    if (req.path.includes('/avatar')) {
+      uploadDir = path.join(__dirname, '../uploads/avatars');
+    } else {
+      uploadDir = path.join(__dirname, '../uploads/images');
+    }
     // 确保上传目录存在
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -103,6 +108,44 @@ router.post('/images', auth, upload.array('images', 9), async (req, res) => {
     console.error('Upload images error:', error);
     res.status(500).json({
       error: 'Failed to upload images',
+      message: 'Something went wrong'
+    });
+  }
+});
+
+// @route   POST /api/upload/avatar
+// @desc    Upload user avatar
+// @access  Private
+router.post('/avatar', auth, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No file uploaded',
+        message: 'Please select an image to upload'
+      });
+    }
+
+    // 构建头像URL
+    const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/avatars/${req.file.filename}`;
+
+    // 更新用户头像URL
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user._id, {
+      avatar: avatarUrl
+    });
+
+    res.json({
+      message: 'Avatar uploaded successfully',
+      avatarURL: avatarUrl,
+      filename: req.file.filename,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    });
+
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({
+      error: 'Failed to upload avatar',
       message: 'Something went wrong'
     });
   }
