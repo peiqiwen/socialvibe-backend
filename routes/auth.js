@@ -273,4 +273,52 @@ router.post('/change-password', [
   }
 });
 
+// @route   DELETE /api/auth/delete-account
+// @desc    Delete user account
+// @access  Private
+router.delete('/delete-account', [
+  auth,
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required for account deletion')
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'Please check your input',
+        details: errors.array()
+      });
+    }
+
+    const { password } = req.body;
+    const user = await User.findById(req.user._id);
+
+    // Verify password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        error: 'Invalid password',
+        message: 'Password is incorrect'
+      });
+    }
+
+    // Delete user account
+    await User.findByIdAndDelete(req.user._id);
+
+    res.json({
+      message: 'Account deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({
+      error: 'Account deletion failed',
+      message: 'Something went wrong'
+    });
+  }
+});
+
 module.exports = router; 

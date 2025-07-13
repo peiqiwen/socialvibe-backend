@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 // Import routes
@@ -11,6 +12,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const feedRoutes = require('./routes/feeds');
 const vibeRoutes = require('./routes/vibe');
+const uploadRoutes = require('./routes/upload');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,6 +61,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Static file serving for uploaded images
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Database connection
 const connectDB = async () => {
   try {
@@ -95,6 +100,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/feeds', feedRoutes);
 app.use('/api/vibe', vibeRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -106,7 +112,8 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       users: '/api/users',
       feeds: '/api/feeds',
-      vibe: '/api/vibe'
+      vibe: '/api/vibe',
+      upload: '/api/upload'
     }
   });
 });
