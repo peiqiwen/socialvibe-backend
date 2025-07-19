@@ -150,6 +150,58 @@ router.post('/', [
   }
 });
 
+// @route   GET /api/feeds/:feedId/comments
+// @desc    Get comments for a feed
+// @access  Public
+router.get('/:feedId/comments', optionalAuth, async (req, res) => {
+  try {
+    const { feedId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+
+    const feed = await Feed.findById(feedId)
+      .populate('comments.user', 'username displayName avatar')
+      .select('comments author isPublic status');
+    
+    if (!feed || feed.status !== 'active') {
+      return res.status(404).json({
+        error: 'Feed not found',
+        message: 'Feed does not exist or has been deleted'
+      });
+    }
+
+    // Check if user can view this feed
+    if (!feed.isPublic && (!req.user || feed.author.toString() !== req.user._id.toString())) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'This feed is private'
+      });
+    }
+
+    // Sort comments by creation date (newest first)
+    const sortedComments = feed.comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Apply pagination
+    const paginatedComments = sortedComments.slice(skip, skip + limit);
+
+    res.json({
+      comments: paginatedComments,
+      page,
+      limit,
+      total: feed.comments.length,
+      hasMore: skip + paginatedComments.length < feed.comments.length
+    });
+
+  } catch (error) {
+    console.error('Get comments error:', error);
+    res.status(500).json({
+      error: 'Failed to get comments',
+      message: 'Something went wrong'
+    });
+  }
+});
+
 // @route   GET /api/feeds/:feedId
 // @desc    Get a specific feed
 // @access  Public
@@ -399,58 +451,6 @@ router.post('/:feedId/comment', [
     console.error('Add comment error:', error);
     res.status(500).json({
       error: 'Failed to add comment',
-      message: 'Something went wrong'
-    });
-  }
-});
-
-// @route   GET /api/feeds/:feedId/comments
-// @desc    Get comments for a feed
-// @access  Public
-router.get('/:feedId/comments', optionalAuth, async (req, res) => {
-  try {
-    const { feedId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const skip = (page - 1) * limit;
-
-    const feed = await Feed.findById(feedId)
-      .populate('comments.user', 'username displayName avatar')
-      .select('comments');
-    
-    if (!feed || feed.status !== 'active') {
-      return res.status(404).json({
-        error: 'Feed not found',
-        message: 'Feed does not exist or has been deleted'
-      });
-    }
-
-    // Check if user can view this feed
-    if (!feed.isPublic && (!req.user || feed.author.toString() !== req.user._id.toString())) {
-      return res.status(403).json({
-        error: 'Access denied',
-        message: 'This feed is private'
-      });
-    }
-
-    // Sort comments by creation date (newest first)
-    const sortedComments = feed.comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    // Apply pagination
-    const paginatedComments = sortedComments.slice(skip, skip + limit);
-
-    res.json({
-      comments: paginatedComments,
-      page,
-      limit,
-      total: feed.comments.length,
-      hasMore: skip + paginatedComments.length < feed.comments.length
-    });
-
-  } catch (error) {
-    console.error('Get comments error:', error);
-    res.status(500).json({
-      error: 'Failed to get comments',
       message: 'Something went wrong'
     });
   }
