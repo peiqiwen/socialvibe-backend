@@ -2,19 +2,19 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 
-// AI内容建议生成
+// AI content suggestions generation
 router.post('/content-suggestions', auth, async (req, res) => {
     try {
         const { initialText } = req.body;
         
-        // 模拟AI内容建议
+        // Simulate AI content suggestions
         const suggestions = [
-            "分享一个有趣的生活瞬间，让朋友们感受到你的快乐！",
-            "记录下今天的美好时刻，这些回忆值得珍藏。",
-            "与大家分享你的想法和感受，真实的你最有魅力。",
-            "用文字记录生活的点滴，让每一天都变得有意义。",
-            "今天的心情如何？分享给大家吧！",
-            "有什么有趣的事情想和大家分享吗？"
+            "Share an interesting moment from your life and let your friends feel your joy!",
+            "Record today's beautiful moments, these memories are worth cherishing.",
+            "Share your thoughts and feelings with everyone, the real you is most charming.",
+            "Use words to record life's little moments, making every day meaningful.",
+            "How are you feeling today? Share it with everyone!",
+            "Is there anything interesting you'd like to share with everyone?"
         ];
         
         res.json({
@@ -25,21 +25,21 @@ router.post('/content-suggestions', auth, async (req, res) => {
         console.error('AI content suggestions error:', error);
         res.status(500).json({
             success: false,
-            message: '生成内容建议失败'
+            message: 'Failed to generate content suggestions'
         });
     }
 });
 
-// AI话题建议生成
+// AI topic suggestions generation
 router.post('/topic-suggestions', auth, async (req, res) => {
     try {
         const { context } = req.body;
         
-        // 模拟AI话题建议
+        // Simulate AI topic suggestions
         const topics = [
-            "#生活日常", "#美食分享", "#旅行记录", "#心情随笔",
-            "#工作感悟", "#学习心得", "#健康生活", "#创意灵感",
-            "#音乐分享", "#电影推荐", "#读书笔记", "#运动健身"
+            "#DailyLife", "#FoodShare", "#TravelRecord", "#MoodDiary",
+            "#WorkInsights", "#LearningNotes", "#HealthyLife", "#CreativeInspiration",
+            "#MusicShare", "#MovieRecommendation", "#BookNotes", "#Fitness"
         ];
         
         res.json({
@@ -50,21 +50,21 @@ router.post('/topic-suggestions', auth, async (req, res) => {
         console.error('AI topic suggestions error:', error);
         res.status(500).json({
             success: false,
-            message: '生成话题建议失败'
+            message: 'Failed to generate topic suggestions'
         });
     }
 });
 
-// AI标签建议生成
+// AI tag suggestions generation
 router.post('/tag-suggestions', auth, async (req, res) => {
     try {
         const { content } = req.body;
         
-        // 模拟AI标签建议
+        // Simulate AI tag suggestions
         const tags = [
-            "生活", "分享", "日常", "美好", "记录",
-            "心情", "感悟", "创意", "灵感", "快乐",
-            "美食", "旅行", "工作", "学习", "健康"
+            "Life", "Share", "Daily", "Beautiful", "Record",
+            "Mood", "Insights", "Creative", "Inspiration", "Happy",
+            "Food", "Travel", "Work", "Learning", "Health"
         ];
         
         res.json({
@@ -75,21 +75,21 @@ router.post('/tag-suggestions', auth, async (req, res) => {
         console.error('AI tag suggestions error:', error);
         res.status(500).json({
             success: false,
-            message: '生成标签建议失败'
+            message: 'Failed to generate tag suggestions'
         });
     }
 });
 
-// AI话题标签建议生成
+// AI hashtag suggestions generation
 router.post('/hashtag-suggestions', auth, async (req, res) => {
     try {
         const { content } = req.body;
         
-        // 模拟AI话题标签建议
+        // Simulate AI hashtag suggestions
         const hashtags = [
-            "#SocialVibe", "#生活分享", "#日常记录", "#美好时光",
-            "#心情随笔", "#创意生活", "#快乐分享", "#生活感悟",
-            "#美食分享", "#旅行记录", "#工作感悟", "#学习心得"
+            "#SocialVibe", "#LifeShare", "#DailyRecord", "#BeautifulMoments",
+            "#MoodDiary", "#CreativeLife", "#HappyShare", "#LifeInsights",
+            "#FoodShare", "#TravelRecord", "#WorkInsights", "#LearningNotes"
         ];
         
         res.json({
@@ -100,7 +100,7 @@ router.post('/hashtag-suggestions', auth, async (req, res) => {
         console.error('AI hashtag suggestions error:', error);
         res.status(500).json({
             success: false,
-            message: '生成话题标签建议失败'
+            message: 'Failed to generate hashtag suggestions'
         });
     }
 });

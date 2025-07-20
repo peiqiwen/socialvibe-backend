@@ -6,7 +6,7 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// 配置multer存储
+// Configure multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     let uploadDir;
