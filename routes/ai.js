@@ -4,10 +4,20 @@ const OpenAI = require('openai');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 
-// 配置 OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// 配置 OpenAI - 延迟初始化
+let openai = null;
+
+function getOpenAI() {
+  if (!openai) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
 
 // 配置 multer 用于文件上传
 const upload = multer({
@@ -317,7 +327,7 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
     const finalPrompt = prompt ? `${prompt}\n\n${selectedPrompt}` : selectedPrompt;
 
     // 调用 OpenAI Vision API
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o", // 使用 GPT-4o 模型
       messages: [
         {
@@ -352,7 +362,7 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
 
     // 如果没有找到标签，生成一些通用标签
     if (hashtags.length < 3) {
-      const tagResponse = await openai.chat.completions.create({
+      const tagResponse = await getOpenAI().chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
