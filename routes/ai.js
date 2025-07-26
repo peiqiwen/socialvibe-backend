@@ -10,8 +10,10 @@ let openai = null;
 function getOpenAI() {
   if (!openai) {
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY environment variable is required');
+      console.error('❌ OPENAI_API_KEY environment variable is missing');
+      throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
     }
+    console.log('✅ OpenAI client initialized with API key');
     openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -299,18 +301,30 @@ router.post('/content-quality-assessment', auth, async (req, res) => {
 // 图生文 API 端点
 router.post('/image-to-text', upload.single('image'), async (req, res) => {
   try {
+    console.log('🖼️ Image-to-text request received');
+    console.log('📋 Request body:', req.body);
+    console.log('📁 Request file:', req.file ? 'Present' : 'Missing');
+    
     const { style, prompt } = req.body;
     const imageFile = req.file;
 
     if (!imageFile) {
+      console.log('❌ No image file provided');
       return res.status(400).json({
         success: false,
         message: '请上传图片文件'
       });
     }
 
+    console.log('📊 Image file info:', {
+      originalname: imageFile.originalname,
+      mimetype: imageFile.mimetype,
+      size: imageFile.size
+    });
+
     // 将图片转换为 base64
     const base64Image = imageFile.buffer.toString('base64');
+    console.log('🔄 Image converted to base64, length:', base64Image.length);
 
     // 根据风格准备提示词
     const stylePrompts = {
@@ -325,6 +339,8 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
 
     const selectedPrompt = stylePrompts[style] || stylePrompts.creative;
     const finalPrompt = prompt ? `${prompt}\n\n${selectedPrompt}` : selectedPrompt;
+
+    console.log('🤖 Calling OpenAI API with style:', style);
 
     // 调用 OpenAI Vision API
     const response = await getOpenAI().chat.completions.create({
@@ -350,6 +366,8 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
       temperature: 0.7
     });
 
+    console.log('✅ OpenAI API call successful');
+
     const generatedText = response.choices[0].message.content;
 
     // 提取标签
@@ -362,6 +380,7 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
 
     // 如果没有找到标签，生成一些通用标签
     if (hashtags.length < 3) {
+      console.log('🏷️ Generating additional tags');
       const tagResponse = await getOpenAI().chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
@@ -390,7 +409,7 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
     const outputTokens = response.usage.completion_tokens;
     const totalCost = (inputTokens * 0.01 + outputTokens * 0.03) / 1000;
 
-    console.log(`Image-to-Text API 调用成功 - 成本: $${totalCost.toFixed(4)}`);
+    console.log(`💰 Image-to-Text API 调用成功 - 成本: $${totalCost.toFixed(4)}`);
 
     res.json({
       success: true,
@@ -405,7 +424,13 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('图生文 API 错误:', error);
+    console.error('❌ 图生文 API 错误:', error);
+    console.error('📋 Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     
     // 处理不同类型的错误
     if (error.code === 'insufficient_quota') {
@@ -417,6 +442,11 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
       res.status(401).json({
         success: false,
         message: 'API 密钥无效，请检查配置'
+      });
+    } else if (error.message && error.message.includes('OpenAI API key')) {
+      res.status(500).json({
+        success: false,
+        message: 'OpenAI API 配置错误，请联系管理员'
       });
     } else {
       res.status(500).json({
@@ -465,11 +495,24 @@ router.get('/styles', (req, res) => {
 
 // 健康检查端点
 router.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'AI 服务运行正常',
-    timestamp: new Date().toISOString()
-  });
+  try {
+    // 检查 OpenAI 配置
+    const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+    
+    res.json({
+      success: true,
+      message: 'AI 服务运行正常',
+      openai_configured: hasOpenAIKey,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'AI 服务配置错误',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 module.exports = router; 
