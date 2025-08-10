@@ -192,8 +192,11 @@ router.post('/logout', auth, async (req, res) => {
 // @access  Private
 router.get('/me', auth, async (req, res) => {
   try {
+    // Get fresh user data with all fields
+    const user = await User.findById(req.user._id);
+    
     res.json({
-      user: req.user
+      user: user.getPublicProfile()
     });
   } catch (error) {
     console.error('Get profile error:', error);
