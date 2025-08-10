@@ -14,6 +14,7 @@ const feedRoutes = require('./routes/feeds');
 const vibeRoutes = require('./routes/vibe');
 const uploadRoutes = require('./routes/upload');
 const aiRoutes = require('./routes/ai');
+const friendRoutes = require('./routes/friends');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -103,6 +104,7 @@ app.use('/api/feeds', feedRoutes);
 app.use('/api/vibe', vibeRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -116,7 +118,8 @@ app.get('/', (req, res) => {
       feeds: '/api/feeds',
       vibe: '/api/vibe',
       upload: '/api/upload',
-      ai: '/api/ai'
+      ai: '/api/ai',
+      friends: '/api/friends'
     }
   });
 });

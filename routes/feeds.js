@@ -2,12 +2,13 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Feed = require('../models/Feed');
 const User = require('../models/User');
+const Friend = require('../models/Friend');
 const { auth, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
 // @route   GET /api/feeds
-// @desc    Get feeds with pagination
+// @desc    Get feeds with pagination (only friends' feeds for authenticated users)
 // @access  Public
 router.get('/', optionalAuth, async (req, res) => {
   try {
@@ -18,21 +19,17 @@ router.get('/', optionalAuth, async (req, res) => {
     // Build query based on filters
     let query = { status: 'active' };
     
-    // If user is authenticated, show feeds from followed users and public feeds
+    // If user is authenticated, show feeds from friends and user's own feeds
     if (req.user) {
-      const user = await User.findById(req.user._id).populate('following');
-      const followingIds = user.following.map(u => u._id);
-      followingIds.push(req.user._id); // Include user's own feeds
+      // Get user's friends
+      const friends = await Friend.find({ userId: req.user._id });
+      const friendIds = friends.map(friend => friend.friendId);
+      friendIds.push(req.user._id); // Include user's own feeds
       
       query = {
         $and: [
           { status: 'active' },
-          {
-            $or: [
-              { author: { $in: followingIds } },
-              { isPublic: true }
-            ]
-          }
+          { author: { $in: friendIds } }
         ]
       };
     } else {

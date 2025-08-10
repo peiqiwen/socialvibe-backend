@@ -436,22 +436,22 @@ router.post('/image-to-text', upload.single('image'), async (req, res) => {
     if (error.code === 'insufficient_quota') {
       res.status(429).json({
         success: false,
-        message: 'API 配额不足，请稍后重试或升级账户'
+        message: 'API quota exceeded. Please try again later or upgrade your account.'
       });
     } else if (error.code === 'invalid_api_key') {
       res.status(401).json({
         success: false,
-        message: 'API 密钥无效，请检查配置'
+        message: 'Invalid API key. Please check configuration.'
       });
     } else if (error.message && error.message.includes('OpenAI API key')) {
       res.status(500).json({
         success: false,
-        message: 'OpenAI API 配置错误，请联系管理员'
+        message: 'OpenAI API configuration error. Please contact administrator.'
       });
     } else {
       res.status(500).json({
         success: false,
-        message: '图片处理失败，请重试',
+        message: 'Image processing failed. Please try again.',
         error: error.message
       });
     }
@@ -501,14 +501,14 @@ router.get('/health', (req, res) => {
     
     res.json({
       success: true,
-      message: 'AI 服务运行正常',
+      message: 'AI service is running normally',
       openai_configured: hasOpenAIKey,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'AI 服务配置错误',
+      message: 'AI service configuration error',
       error: error.message,
       timestamp: new Date().toISOString()
     });

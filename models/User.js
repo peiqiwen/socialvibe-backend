@@ -59,6 +59,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  friendCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    uppercase: true,
+    minlength: 6,
+    maxlength: 6
+  },
   lastLoginAt: {
     type: Date,
     default: Date.now
