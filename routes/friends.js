@@ -11,8 +11,8 @@ router.get('/code', auth, async (req, res) => {
         const user = await User.findById(req.user.id);
         
         if (!user.friendCode) {
-            // 生成6位随机好友码
-            const friendCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            // 生成8位随机好友码
+            const friendCode = await User.generateUniqueFriendCode();
             user.friendCode = friendCode;
             await user.save();
         }
@@ -37,8 +37,8 @@ router.post('/code/generate', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         
-        // 生成新的6位随机好友码
-        const friendCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        // 生成新的8位随机好友码
+        const friendCode = await User.generateUniqueFriendCode();
         user.friendCode = friendCode;
         await user.save();
         

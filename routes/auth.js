@@ -68,6 +68,9 @@ router.post('/register', [
       displayName
     });
 
+    // Generate unique friend code
+    user.friendCode = await User.generateUniqueFriendCode();
+
     await user.save();
 
     // Generate token

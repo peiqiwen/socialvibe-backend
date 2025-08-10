@@ -64,8 +64,8 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
     uppercase: true,
-    minlength: 6,
-    maxlength: 6
+    minlength: 8,
+    maxlength: 8
   },
   lastLoginAt: {
     type: Date,
@@ -115,6 +115,32 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+// Generate 8-character friend code
+userSchema.statics.generateFriendCode = function() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
+// Generate unique friend code
+userSchema.statics.generateUniqueFriendCode = async function() {
+  let friendCode;
+  let isUnique = false;
+  
+  while (!isUnique) {
+    friendCode = this.generateFriendCode();
+    const existingUser = await this.findOne({ friendCode });
+    if (!existingUser) {
+      isUnique = true;
+    }
+  }
+  
+  return friendCode;
+};
+
 // Get public profile (without sensitive data)
 userSchema.methods.getPublicProfile = function() {
   return {
@@ -124,6 +150,7 @@ userSchema.methods.getPublicProfile = function() {
     avatar: this.avatar,
     bio: this.bio,
     isVerified: this.isVerified,
+    friendCode: this.friendCode,
     followers: this.followers.length,
     following: this.following.length,
     createdAt: this.createdAt
